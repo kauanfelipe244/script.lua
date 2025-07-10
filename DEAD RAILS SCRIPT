@@ -2,47 +2,107 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local Backpack = player:WaitForChild("Backpack")
 
--- Função para criar uma ferramenta personalizada
-local function criarItem(nome, aoEquipar)
-    local tool = Instance.new("Tool")
-    tool.RequiresHandle = false
-    tool.Name = nome
-    tool.Parent = Backpack
-
-    tool.Activated:Connect(aoEquipar)
+-- Função auxiliar: buscar o Humanoid
+local function getHumanoid()
+	local character = player.Character or player.CharacterAdded:Wait()
+	return character:FindFirstChildWhichIsA("Humanoid")
 end
 
--- Item 1: Noclip (ativa noclip ao clicar com o item)
+-- Função para criar ferramentas
+local function criarItem(nome, aoAtivar)
+	local tool = Instance.new("Tool")
+	tool.RequiresHandle = false
+	tool.Name = nome
+	tool.Parent = Backpack
+
+	tool.Activated:Connect(function()
+		coroutine.wrap(function()
+			pcall(aoAtivar)
+		end)()
+	end)
+end
+
+-- 🔹 Item 1: Noclip
 criarItem("Noclip", function()
-    local char = player.Character
-    if char then
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
+	local char = player.Character
+	if char then
+		for _, part in ipairs(char:GetDescendants()) do
+			if part:IsA("BasePart") and part.CanCollide then
+				part.CanCollide = false
+			end
+		end
+	end
 end)
 
--- Item 2: Horse fly
+-- 🔹 Item 2: Horse fly
 criarItem("Horse fly", function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/GhostPlayer352/Test4/refs/heads/main/Vehicle%20Fly%20Gui'))()
+	local success, err = pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/GhostPlayer352/Test4/refs/heads/main/Vehicle%20Fly%20Gui"))()
+	end)
+	if not success then
+		warn("Erro ao carregar Horse Fly:", err)
+	end
 end)
 
--- Item 3: Admin hub
+-- 🔹 Item 3: Admin hub
 criarItem("Admin hub", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/main/DeadRails"))()
+	local success, err = pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/main/DeadRails"))()
+	end)
+	if not success then
+		warn("Erro ao carregar Admin Hub:", err)
+	end
 end)
 
--- Item 4: Gojo
+-- 🔹 Item 4: Gojo
 criarItem("Gojo", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/LolnotaKid/SCRIPTSBYVEUX/refs/heads/main/LALALALALALAGOJOOO.lua.txt"))()
+	local success, err = pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/LolnotaKid/SCRIPTSBYVEUX/refs/heads/main/LALALALALALAGOJOOO.lua.txt"))()
+	end)
+	if not success then
+		warn("Erro ao carregar Gojo:", err)
+	end
 end)
 
--- Item 5: Speed Hack (ativa velocidade 49)
+-- 🔹 Item 5: Speed Hack
 criarItem("Speed Hack", function()
-    local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
-    if humanoid then
-        humanoid.WalkSpeed = 49
-    end
+	local humanoid = getHumanoid()
+	if humanoid then
+		humanoid.WalkSpeed = 49
+	end
+end)
+
+-- 🔹 Item 6: Anti Lag
+criarItem("Anti Lag", function()
+	local char = player.Character
+
+	-- Limpa efeitos do personagem
+	if char then
+		for _, obj in ipairs(char:GetDescendants()) do
+			if obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+				obj:Destroy()
+			elseif obj:IsA("BasePart") then
+				obj.Material = Enum.Material.SmoothPlastic
+				obj.Reflectance = 0
+				obj.Transparency = 0.2
+			elseif obj:IsA("MeshPart") or obj:IsA("SpecialMesh") then
+				obj:Destroy()
+			end
+		end
+	end
+
+	-- Limpa efeitos gráficos da Lighting
+	local lighting = game:GetService("Lighting")
+	for _, obj in ipairs(lighting:GetChildren()) do
+		if obj:IsA("BlurEffect") or obj:IsA("SunRaysEffect") or obj:IsA("BloomEffect") or obj:IsA("ColorCorrectionEffect") then
+			obj:Destroy()
+		end
+	end
+
+	-- Ajusta configurações de luz
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 100000
+	lighting.Brightness = 1
+
+	print("✅ Anti Lag ativado!")
 end)
